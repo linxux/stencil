@@ -1,0 +1,11 @@
+{
+  "templateDir": "./template",
+  "outputDir": "./output",
+  "variables": {
+    "project_name": "myproject",
+    "author": "Your Name",
+    "version": "1.0.0"
+  },
+  "interactive": true,
+  "dryRun": false
+}

@@ -1,0 +1,13 @@
+{
+  "templateDir": "./template-go-basic",
+  "outputDir": "./my-project",
+  "variables": {
+    "project_name": "myapp",
+    "module_path": "github.com/example/myapp",
+    "author": "Your Name",
+    "description": "An awesome application",
+    "version": "1.0.0"
+  },
+  "interactive": false,
+  "dryRun": false
+}
