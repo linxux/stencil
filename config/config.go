@@ -6,6 +6,18 @@ import (
 	"path/filepath"
 )
 
+// FormatOptions controls which variable formats are enabled
+type FormatOptions struct {
+	// EnableBraces enables {{var}} format
+	EnableBraces bool `json:"enableBraces"`
+	// EnableAngleBrackets enables <<var>> format
+	EnableAngleBrackets bool `json:"enableAngleBrackets"`
+	// EnableUnderscores enables __var__ format
+	EnableUnderscores bool `json:"enableUnderscores"`
+	// EnablePercent enables %var% format
+	EnablePercent bool `json:"enablePercent"`
+}
+
 // Config represents the generator configuration
 type Config struct {
 	// TemplateDir is the source template directory
@@ -25,6 +37,9 @@ type Config struct {
 
 	// SkipConfirm skips confirmation prompt in interactive mode
 	SkipConfirm bool `json:"skipConfirm"`
+
+	// Formats controls which variable formats are enabled
+	Formats FormatOptions `json:"formats"`
 }
 
 // LoadConfig loads configuration from a JSON file
@@ -67,5 +82,11 @@ func DefaultConfig() *Config {
 		Interactive: false,
 		DryRun:      false,
 		SkipConfirm: false,
+		Formats: FormatOptions{
+			EnableBraces:        true,
+			EnableAngleBrackets: true,
+			EnableUnderscores:   true,
+			EnablePercent:       true,
+		},
 	}
 }

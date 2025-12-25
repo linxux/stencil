@@ -6,6 +6,12 @@
     "author": "Your Name",
     "version": "1.0.0"
   },
+  "formats": {
+    "enableBraces": true,
+    "enableAngleBrackets": true,
+    "enableUnderscores": true,
+    "enablePercent": false
+  },
   "interactive": true,
   "dryRun": false
 }

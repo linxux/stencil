@@ -29,6 +29,12 @@ var (
 	skipConfirm     bool
 	showVersion     bool
 	showHelp        bool
+
+	// Format flags (use pointers to distinguish "not set" from "false")
+	disableBraces        *bool
+	disableAngleBrackets *bool
+	disableUnderscores   *bool
+	disablePercent       *bool
 )
 
 func init() {
@@ -57,6 +63,12 @@ func init() {
 
 	flag.BoolVar(&showHelp, "h", false, "Show help information")
 	flag.BoolVar(&showHelp, "help", false, "Show help information")
+
+	// Format control flags
+	disableBraces = flag.Bool("disable-braces", false, "Disable {{var}} format")
+	disableAngleBrackets = flag.Bool("disable-angle-brackets", false, "Disable <<var>> format")
+	disableUnderscores = flag.Bool("disable-underscores", false, "Disable __var__ format")
+	disablePercent = flag.Bool("disable-percent", false, "Disable %var% format")
 }
 
 func main() {
@@ -172,6 +184,20 @@ func loadConfig() (*config.Config, error) {
 		}
 	}
 
+	// Apply format flags (flags take precedence over config file)
+	if disableBraces != nil {
+		cfg.Formats.EnableBraces = !*disableBraces
+	}
+	if disableAngleBrackets != nil {
+		cfg.Formats.EnableAngleBrackets = !*disableAngleBrackets
+	}
+	if disableUnderscores != nil {
+		cfg.Formats.EnableUnderscores = !*disableUnderscores
+	}
+	if disablePercent != nil {
+		cfg.Formats.EnablePercent = !*disablePercent
+	}
+
 	// Show which config was used
 	if configUsed {
 		fmt.Printf("Using config file: %s\n", configFile)
@@ -249,6 +275,10 @@ OPTIONS:
   -i, --interactive         Interactive mode
   --dry-run                 Dry run (show what would be generated)
   -y, --yes                 Skip confirmation in interactive mode
+  --disable-braces          Disable {{var}} format (default: enabled)
+  --disable-angle-brackets  Disable <<var>> format (default: enabled)
+  --disable-underscores     Disable __var__ format (default: enabled)
+  --disable-percent         Disable %%var%% format (default: enabled)
   --version                 Show version information
   -h, --help                Show this help message
 
@@ -270,6 +300,9 @@ EXAMPLES:
   # Interactive mode
   stencil -t ./template -o ./output -i
 
+  # Disable %%var%% format to avoid conflicts with Go format strings
+  stencil -t ./template -o ./output --disable-percent
+
   # Using configuration file
   stencil -c config.json
 
@@ -277,16 +310,19 @@ EXAMPLES:
   stencil -t ./template -o ./output --dry-run
 
 TEMPLATE SYNTAX:
-  Variables can be specified in multiple formats:
-  - {{variable}}
-  - <<variable>>
-  - __variable__
-  - %%variable%%
+  Variables can be specified in multiple formats (all enabled by default):
+  - {{variable}}        Can be disabled with --disable-braces
+  - <<variable>>        Can be disabled with --disable-angle-brackets
+  - __variable__        Can be disabled with --disable-underscores
+  - %%variable%%        Can be disabled with --disable-percent
 
   These will be replaced in:
   - File contents
   - File names
   - Directory names
+
+  Format control is useful when templates use syntax that conflicts
+  with the variable format (e.g., Go's fmt.Sprintf uses %%s format).
 
 CONFIG FILE FORMAT (JSON):
   {
@@ -297,7 +333,13 @@ CONFIG FILE FORMAT (JSON):
       "author": "John"
     },
     "interactive": false,
-    "dryRun": false
+    "dryRun": false,
+    "formats": {
+      "enableBraces": true,
+      "enableAngleBrackets": true,
+      "enableUnderscores": true,
+      "enablePercent": false
+    }
   }
 
 `, version)

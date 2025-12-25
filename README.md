@@ -7,6 +7,7 @@ A fast and flexible project scaffolding generator written in Go. Stencil allows 
 - **Template-based Generation**: Use any folder as a template
 - **Variable Substitution**: Replace keywords in files, filenames, and directory names
 - **Multiple Variable Formats**: Supports `{{var}}`, `<<var>>`, `__var__`, and `%var%` syntax
+- **Format Control**: Disable specific variable formats to avoid conflicts with template language syntax
 - **Interactive Mode**: Prompt for variables interactively during generation
 - **Dry Run**: Preview what would be generated without creating files
 - **Config File Support**: Use JSON files for reusable configurations
@@ -110,6 +111,10 @@ sudo mv ./bin/stencil /usr/local/bin/
   -i, --interactive         Interactive mode
   --dry-run                 Dry run (show what would be generated)
   -y, --yes                 Skip confirmation in interactive mode
+  --disable-braces          Disable {{var}} format (default: enabled)
+  --disable-angle-brackets  Disable <<var>> format (default: enabled)
+  --disable-underscores     Disable __var__ format (default: enabled)
+  --disable-percent         Disable %var% format (default: enabled)
   --version                 Show version information
   -h, --help                Show help message
 ```
@@ -127,6 +132,41 @@ These will be replaced in:
 - File contents
 - File names
 - Directory names
+
+### Format Control
+
+Sometimes variable formats can conflict with syntax in your template language. For example, Go uses `%s` in format strings which could be confused with the `%var%` format. Stencil allows you to disable specific formats:
+
+```bash
+# Disable %var% format to avoid conflicts with Go format strings
+./bin/stencil -t ./go-template -o ./output --disable-percent
+
+# Disable multiple formats
+./bin/stencil -t ./template -o ./output --disable-percent --disable-angle-brackets
+```
+
+You can also control formats in your config file:
+
+```json
+{
+  "templateDir": "./template",
+  "outputDir": "./output",
+  "variables": {
+    "project_name": "myapp"
+  },
+  "formats": {
+    "enableBraces": true,
+    "enableAngleBrackets": true,
+    "enableUnderscores": true,
+    "enablePercent": false
+  }
+}
+```
+
+**Common use cases for format control:**
+- **Go templates**: Use `--disable-percent` to avoid conflicts with `fmt.Sprintf` and similar functions
+- **Python templates**: Use `--disable-braces` if using Jinja2 or similar templating engines
+- **C++ templates**: Use `--disable-angle-brackets` to avoid conflicts with template syntax
 
 ### Example Template Structure
 
@@ -179,7 +219,13 @@ Create a `stencil.json` file for reusable settings:
     "version": "1.0.0"
   },
   "interactive": false,
-  "dryRun": false
+  "dryRun": false,
+  "formats": {
+    "enableBraces": true,
+    "enableAngleBrackets": true,
+    "enableUnderscores": true,
+    "enablePercent": true
+  }
 }
 ```
 

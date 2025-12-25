@@ -5,17 +5,21 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/linxux/stencil/config"
 )
 
 // Replacer handles keyword replacement in content and paths
 type Replacer struct {
 	variables map[string]string
+	formats   config.FormatOptions
 }
 
-// NewReplacer creates a new Replacer with the given variables
-func NewReplacer(variables map[string]string) *Replacer {
+// NewReplacer creates a new Replacer with the given variables and format options
+func NewReplacer(variables map[string]string, formats config.FormatOptions) *Replacer {
 	return &Replacer{
 		variables: variables,
+		formats:   formats,
 	}
 }
 
@@ -24,20 +28,28 @@ func (r *Replacer) ReplaceInContent(content []byte) []byte {
 	result := content
 	for key, value := range r.variables {
 		// Replace {{key}} format
-		pattern := []byte("{{" + key + "}}")
-		result = bytes.ReplaceAll(result, pattern, []byte(value))
+		if r.formats.EnableBraces {
+			pattern := []byte("{{" + key + "}}")
+			result = bytes.ReplaceAll(result, pattern, []byte(value))
+		}
 
 		// Replace <<key>> format
-		pattern2 := []byte("<<" + key + ">>")
-		result = bytes.ReplaceAll(result, pattern2, []byte(value))
+		if r.formats.EnableAngleBrackets {
+			pattern2 := []byte("<<" + key + ">>")
+			result = bytes.ReplaceAll(result, pattern2, []byte(value))
+		}
 
 		// Replace __key__ format
-		pattern3 := []byte("__" + key + "__")
-		result = bytes.ReplaceAll(result, pattern3, []byte(value))
+		if r.formats.EnableUnderscores {
+			pattern3 := []byte("__" + key + "__")
+			result = bytes.ReplaceAll(result, pattern3, []byte(value))
+		}
 
 		// Replace %key% format
-		pattern4 := []byte("%" + key + "%")
-		result = bytes.ReplaceAll(result, pattern4, []byte(value))
+		if r.formats.EnablePercent {
+			pattern4 := []byte("%" + key + "%")
+			result = bytes.ReplaceAll(result, pattern4, []byte(value))
+		}
 	}
 	return result
 }
@@ -47,57 +59,73 @@ func (r *Replacer) ReplaceInPath(path string) string {
 	result := path
 	for key, value := range r.variables {
 		// Replace {{key}} format
-		result = strings.ReplaceAll(result, "{{"+key+"}}", value)
+		if r.formats.EnableBraces {
+			result = strings.ReplaceAll(result, "{{"+key+"}}", value)
+		}
 
 		// Replace <<key>> format
-		result = strings.ReplaceAll(result, "<<"+key+">>", value)
+		if r.formats.EnableAngleBrackets {
+			result = strings.ReplaceAll(result, "<<"+key+">>", value)
+		}
 
 		// Replace __key__ format (common in folder names)
-		result = strings.ReplaceAll(result, "__"+key+"__", value)
+		if r.formats.EnableUnderscores {
+			result = strings.ReplaceAll(result, "__"+key+"__", value)
+		}
 
 		// Replace %key% format
-		result = strings.ReplaceAll(result, "%"+key+"%", value)
+		if r.formats.EnablePercent {
+			result = strings.ReplaceAll(result, "%"+key+"%", value)
+		}
 	}
 	return result
 }
 
 // ExtractVariablesFromFile extracts variables from file content
-func ExtractVariablesFromFile(content []byte) []string {
+func ExtractVariablesFromFile(content []byte, formats config.FormatOptions) []string {
 	variables := make(map[string]bool)
 
 	// Pattern for {{var}}
-	pattern1 := regexp.MustCompile(`\{\{([^}]+)\}\}`)
-	matches := pattern1.FindAllSubmatch(content, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[string(match[1])] = true
+	if formats.EnableBraces {
+		pattern1 := regexp.MustCompile(`\{\{([^}]+)\}\}`)
+		matches := pattern1.FindAllSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[string(match[1])] = true
+			}
 		}
 	}
 
 	// Pattern for <<var>>
-	pattern2 := regexp.MustCompile(`<<([^>]+)>>`)
-	matches = pattern2.FindAllSubmatch(content, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[string(match[1])] = true
+	if formats.EnableAngleBrackets {
+		pattern2 := regexp.MustCompile(`<<([^>]+)>>`)
+		matches := pattern2.FindAllSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[string(match[1])] = true
+			}
 		}
 	}
 
 	// Pattern for __var__
-	pattern3 := regexp.MustCompile(`__([A-Za-z0-9_]+)__`)
-	matches = pattern3.FindAllSubmatch(content, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[string(match[1])] = true
+	if formats.EnableUnderscores {
+		pattern3 := regexp.MustCompile(`__([A-Za-z0-9_]+)__`)
+		matches := pattern3.FindAllSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[string(match[1])] = true
+			}
 		}
 	}
 
 	// Pattern for %var%
-	pattern4 := regexp.MustCompile(`%([A-Za-z0-9_]+)%`)
-	matches = pattern4.FindAllSubmatch(content, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[string(match[1])] = true
+	if formats.EnablePercent {
+		pattern4 := regexp.MustCompile(`%([A-Za-z0-9_]+)%`)
+		matches := pattern4.FindAllSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[string(match[1])] = true
+			}
 		}
 	}
 
@@ -109,42 +137,50 @@ func ExtractVariablesFromFile(content []byte) []string {
 }
 
 // ExtractVariablesFromPath extracts variables from a path
-func ExtractVariablesFromPath(path string) []string {
+func ExtractVariablesFromPath(path string, formats config.FormatOptions) []string {
 	variables := make(map[string]bool)
 
 	// Pattern for {{var}}
-	pattern1 := regexp.MustCompile(`\{\{([^}]+)\}\}`)
-	matches := pattern1.FindAllStringSubmatch(path, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[match[1]] = true
+	if formats.EnableBraces {
+		pattern1 := regexp.MustCompile(`\{\{([^}]+)\}\}`)
+		matches := pattern1.FindAllStringSubmatch(path, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[match[1]] = true
+			}
 		}
 	}
 
 	// Pattern for <<var>>
-	pattern2 := regexp.MustCompile(`<<([^>]+)>>`)
-	matches = pattern2.FindAllStringSubmatch(path, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[match[1]] = true
+	if formats.EnableAngleBrackets {
+		pattern2 := regexp.MustCompile(`<<([^>]+)>>`)
+		matches := pattern2.FindAllStringSubmatch(path, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[match[1]] = true
+			}
 		}
 	}
 
 	// Pattern for __var__
-	pattern3 := regexp.MustCompile(`__([A-Za-z0-9_]+)__`)
-	matches = pattern3.FindAllStringSubmatch(path, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[match[1]] = true
+	if formats.EnableUnderscores {
+		pattern3 := regexp.MustCompile(`__([A-Za-z0-9_]+)__`)
+		matches := pattern3.FindAllStringSubmatch(path, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[match[1]] = true
+			}
 		}
 	}
 
 	// Pattern for %var%
-	pattern4 := regexp.MustCompile(`%([A-Za-z0-9_]+)%`)
-	matches = pattern4.FindAllStringSubmatch(path, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			variables[match[1]] = true
+	if formats.EnablePercent {
+		pattern4 := regexp.MustCompile(`%([A-Za-z0-9_]+)%`)
+		matches := pattern4.FindAllStringSubmatch(path, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				variables[match[1]] = true
+			}
 		}
 	}
 

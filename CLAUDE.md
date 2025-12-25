@@ -48,12 +48,53 @@ github.com/linxux/stencil
 
 ### Configuration Priority (Highest to Lowest)
 
-1. Command-line flags (`-t`, `-o`, `-v`, `-i`, etc.)
+1. Command-line flags (`-t`, `-o`, `-v`, `-i`, `--disable-*`, etc.)
 2. Config file specified with `-c`
 3. Auto-detected config file (`stencil.json`, `.stencil.json`, `stencil.config.json`)
 4. Built-in defaults (flags defined with defaults: `-t ./template`, `-o ./output`)
 
 **Important**: Flag defaults are set in `flag.StringVar()` calls in `init()`, not in `config.DefaultConfig()`. This means `./bin/stencil` with no args uses `./template` and `./output`.
+
+## Format Control
+
+### The Problem
+
+Some variable formats can conflict with language-specific syntax. For example:
+- **Go**: Uses `%s`, `%d`, etc. in `fmt.Sprintf()` which could be confused with the `%var%` format
+- **Python**: Jinja2 templates use `{{var}}` which conflicts with the `{{var}}` format
+- **C++**: Template syntax uses `<Type>` which could conflict with the `<<var>>` format
+
+### The Solution
+
+Stencil allows you to disable specific variable formats using:
+1. Command-line flags: `--disable-braces`, `--disable-angle-brackets`, `--disable-underscores`, `--disable-percent`
+2. Config file: `"formats": { "enableBraces": false, ... }`
+
+All formats are **enabled by default** for backward compatibility.
+
+### Implementation
+
+**config/config.go**:
+- `FormatOptions` struct with `EnableBraces`, `EnableAngleBrackets`, `EnableUnderscores`, `EnablePercent` bool fields
+- Added to `Config` struct as `Formats FormatOptions`
+- `DefaultConfig()` sets all formats to `true`
+
+**internal/replacer/replacer.go**:
+- `NewReplacer()` now accepts `formats config.FormatOptions` parameter
+- `ReplaceInContent()` checks each format flag before replacing
+- `ReplaceInPath()` checks each format flag before replacing
+- `ExtractVariablesFromFile()` accepts `formats` parameter and only extracts enabled formats
+- `ExtractVariablesFromPath()` accepts `formats` parameter and only extracts enabled formats
+
+**internal/generator/generator.go**:
+- `NewGenerator()` passes `cfg.Formats` to `NewReplacer()`
+- `ExtractVariables()` passes `g.cfg.Formats` to extract functions
+- `SetVariables()` passes `g.cfg.Formats` to `NewReplacer()`
+
+**cmd/stencil/main.go**:
+- Added pointer bool flags: `disableBraces`, `disableAngleBrackets`, `disableUnderscores`, `disablePercent`
+- `loadConfig()` applies format flags to `cfg.Formats` (inverts boolean because flag is "disable")
+- Help text updated with format flags and examples
 
 ## Development Commands
 

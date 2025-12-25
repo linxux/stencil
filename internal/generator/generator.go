@@ -20,7 +20,7 @@ type Generator struct {
 func NewGenerator(cfg *config.Config) *Generator {
 	return &Generator{
 		cfg:      cfg,
-		replacer: replacer.NewReplacer(cfg.Variables),
+		replacer: replacer.NewReplacer(cfg.Variables, cfg.Formats),
 	}
 }
 
@@ -167,7 +167,7 @@ func (g *Generator) ExtractVariables() (map[string]string, error) {
 				return err
 			}
 			if relPath != "." {
-				for _, v := range replacer.ExtractVariablesFromPath(relPath) {
+				for _, v := range replacer.ExtractVariablesFromPath(relPath, g.cfg.Formats) {
 					variables[v] = true
 				}
 			}
@@ -179,7 +179,7 @@ func (g *Generator) ExtractVariables() (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-		for _, v := range replacer.ExtractVariablesFromPath(relPath) {
+		for _, v := range replacer.ExtractVariablesFromPath(relPath, g.cfg.Formats) {
 			variables[v] = true
 		}
 
@@ -189,7 +189,7 @@ func (g *Generator) ExtractVariables() (map[string]string, error) {
 			if err != nil {
 				return err
 			}
-			for _, v := range replacer.ExtractVariablesFromFile(content) {
+			for _, v := range replacer.ExtractVariablesFromFile(content, g.cfg.Formats) {
 				variables[v] = true
 			}
 		}
@@ -213,7 +213,7 @@ func (g *Generator) ExtractVariables() (map[string]string, error) {
 // SetVariables updates the generator's variables
 func (g *Generator) SetVariables(variables map[string]string) {
 	g.cfg.Variables = variables
-	g.replacer = replacer.NewReplacer(variables)
+	g.replacer = replacer.NewReplacer(variables, g.cfg.Formats)
 }
 
 // TemplateDir returns the template directory path
