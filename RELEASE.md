@@ -328,13 +328,13 @@ The `scripts/install.sh` script provides an easy way for users to install Stenci
 
 ```bash
 # Install latest version
-curl -sSL https://raw.githubusercontent.com/linxux/Stencil/master/scripts/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/linxux/stencil/master/scripts/install.sh | sh
 
 # Install specific version
-curl -sSL https://raw.githubusercontent.com/linxux/Stencil/master/scripts/install.sh | sh -s v1.0.0
+curl -sSL https://raw.githubusercontent.com/linxux/stencil/master/scripts/install.sh | sh -s v1.0.0
 
 # Install to custom directory
-curl -sSL https://raw.githubusercontent.com/linxux/Stencil/master/scripts/install.sh | STENCIL_INSTALL=~/.local sh
+curl -sSL https://raw.githubusercontent.com/linxux/stencil/master/scripts/install.sh | STENCIL_INSTALL=~/.local sh
 
 # Install from local copy
 ./scripts/install.sh
@@ -366,7 +366,7 @@ curl -sSL https://raw.githubusercontent.com/linxux/Stencil/master/scripts/instal
 The script expects binaries to follow this naming convention in GitHub releases:
 
 ```
-https://github.com/linxux/Stencil/releases/latest/download/stencil_{os}_{arch}.tar.gz
+https://github.com/linxux/stencil/releases/latest/download/stencil_{os}_{arch}.tar.gz
 ```
 
 Examples:
@@ -393,13 +393,13 @@ Always verify downloaded binaries:
 
 ```bash
 # Download checksums (GitHub)
-curl -sL https://github.com/linxux/Stencil/releases/download/v1.0.0/SHA256SUMS.txt -o SHA256SUMS.txt
+curl -sL https://github.com/linxux/stencil/releases/download/v1.0.0/SHA256SUMS.txt -o SHA256SUMS.txt
 
 # Download checksums (GitLab)
 curl -sL https://gitlab.com/linxux/stencil/-/releases/v1.0.0/downloads/assets/SHA256SUMS.txt -o SHA256SUMS.txt
 
 # Download binary
-curl -sL https://github.com/linxux/Stencil/releases/download/v1.0.0/stencil_linux_amd64.tar.gz -o stencil.tar.gz
+curl -sL https://github.com/linxux/stencil/releases/download/v1.0.0/stencil_linux_amd64.tar.gz -o stencil.tar.gz
 
 # Verify checksum
 sha256sum -c --ignore-missing SHA256SUMS.txt
@@ -529,7 +529,7 @@ When pushing to both platforms:
 
 ```bash
 # Add both remotes
-git remote add github https://github.com/linxux/Stencil.git
+git remote add github https://github.com/linxux/stencil.git
 git remote add gitlab https://gitlab.com/linxux/stencil.git
 
 # Push to both

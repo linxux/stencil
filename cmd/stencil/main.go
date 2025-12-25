@@ -63,7 +63,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Printf("Stencil v%s\n", version)
+		fmt.Printf("Stencil %s\n", version)
 		fmt.Printf("Build: %s\n", buildTime)
 		fmt.Printf("Commit: %s\n", gitCommit)
 		fmt.Println("A project scaffolding generator")
